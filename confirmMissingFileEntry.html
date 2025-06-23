@@ -1,0 +1,72 @@
+<!-- This file includes embedded JS/CSS due to project type rules -->
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 16px; color: #333; }
+    h2 { margin-top: 0; font-size: 1.25em; }
+    p { margin: 12px 0; }
+    #entryList { list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; }
+    #entryList li { padding: 8px 12px; border-bottom: 1px solid #eee; }
+    #entryList li:last-child { border-bottom: none; }
+    label { display: flex; align-items: center; cursor: pointer; }
+    input[type="checkbox"] { margin-right: 8px; }
+    .buttonRow { text-align: right; margin-top: 20px; }
+    button { margin-left: 8px; padding: 6px 14px; font-size: 13px; border: none; border-radius: 3px; cursor: pointer; }
+    #confirmBtn { background-color: #1a73e8; color: #fff; }
+    #confirmBtn:hover { background-color: #1669c1; }
+    #cancelBtn { background-color: #f1f3f4; color: #202124; }
+    #cancelBtn:hover { background-color: #e2e4e6; }
+  </style>
+</head>
+<body>
+  <h2>Confirm Missing File Entries</h2>
+  <p>The following file entries are missing. Select which ones you?d like to create:</p>
+  <ul id="entryList"></ul>
+  <div class="buttonRow">
+    <button id="cancelBtn">Cancel</button>
+    <button id="confirmBtn">Create Selected</button>
+  </div>
+
+  <script>
+    const entries = <?!= JSON.stringify(missingEntries) ?>;
+
+    function buildList() {
+      const list = document.getElementById('entryList');
+      list.innerHTML = '';
+      entries.forEach(item => {
+        const li = document.createElement('li');
+        const label = document.createElement('label');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = item.id;
+        checkbox.checked = true;
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(item.name));
+        li.appendChild(label);
+        list.appendChild(li);
+      });
+    }
+
+    function closeDialog() {
+      google.script.host.close();
+    }
+
+    function onConfirm() {
+      const selected = Array.from(document.querySelectorAll('#entryList input[type="checkbox"]:checked'))
+        .map(cb => cb.value);
+      if (selected.length === 0) {
+        alert('Please select at least one entry to create.');
+        return;
+      }
+      google.script.run
+        .withSuccessHandler(closeDialog)
+        .createMissingFileEntries(selected);
+    }
+
+    document.getElementById('confirmBtn').addEventListener('click', onConfirm);
+    document.getElementById('cancelBtn').addEventListener('click', closeDialog);
+    document.addEventListener('DOMContentLoaded', buildList);
+  </script>
+</body>
+</html>
